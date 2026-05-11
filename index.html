@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Divine Wisdom Calculator Pro</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#0b0b0b;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.calculator{
+  width:370px;
+  background:#161616;
+  border-radius:25px;
+  padding:20px;
+  box-shadow:
+    0 0 25px rgba(0,255,255,0.15),
+    0 0 60px rgba(0,0,0,0.8);
+  border:1px solid #2a2a2a;
+}
+
+.brand{
+  color:white;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:15px;
+  letter-spacing:3px;
+}
+
+.display-container{
+  background:#dce8e8;
+  border-radius:15px;
+  padding:15px;
+  margin-bottom:15px;
+  overflow:hidden;
+}
+
+.history{
+  color:#555;
+  font-size:13px;
+  text-align:right;
+  min-height:20px;
+  margin-bottom:5px;
+}
+
+.display{
+  color:#111;
+  font-size:30px;
+  text-align:right;
+  min-height:40px;
+  overflow-x:auto;
+  white-space:nowrap;
+  font-weight:bold;
+}
+
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+
+button{
+  padding:15px 8px;
+  border:none;
+  border-radius:12px;
+  background:#242424;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#333;
+  transform:translateY(-2px);
+}
+
+button:active{
+  transform:scale(0.95);
+}
+
+.operator{
+  background:#ff9500;
+  color:black;
+}
+
+.equal{
+  background:#00c853;
+  grid-column:span 2;
+}
+
+.clear{
+  background:#ff3b30;
+}
+
+.special{
+  color:#4fc3f7;
+}
+
+.ans{
+  color:#ffd600;
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+  <div class="brand">DIVINE WISDOM</div>
+
+  <div class="display-container">
+    <div class="history" id="history"></div>
+    <div class="display" id="display">0</div>
+  </div>
+
+  <div class="buttons">
+
+    <button onclick="append('(')">(</button>
+    <button onclick="append(')')">)</button>
+    <button class="special" onclick="append('sqrt(')">√</button>
+    <button class="special" onclick="append('^')">xʸ</button>
+    <button class="clear" onclick="clearDisplay()">AC</button>
+
+    <button onclick="append('7')">7</button>
+    <button onclick="append('8')">8</button>
+    <button onclick="append('9')">9</button>
+    <button class="operator" onclick="append('/')">÷</button>
+    <button class="special" onclick="append('sin(')">sin</button>
+
+    <button onclick="append('4')">4</button>
+    <button onclick="append('5')">5</button>
+    <button onclick="append('6')">6</button>
+    <button class="operator" onclick="append('*')">×</button>
+    <button class="special" onclick="append('cos(')">cos</button>
+
+    <button onclick="append('1')">1</button>
+    <button onclick="append('2')">2</button>
+    <button onclick="append('3')">3</button>
+    <button class="operator" onclick="append('-')">−</button>
+    <button class="special" onclick="append('tan(')">tan</button>
+
+    <button onclick="append('0')">0</button>
+    <button onclick="append('.')">.</button>
+    <button class="special" onclick="append('log(')">log</button>
+    <button class="operator" onclick="append('+')">+</button>
+    <button onclick="deleteLast()">DEL</button>
+
+    <button onclick="append('π')">π</button>
+    <button onclick="append('e')">e</button>
+    <button class="ans" onclick="useAns()">ANS</button>
+    <button class="equal" onclick="calculate()">=</button>
+
+  </div>
+
+</div>
+
+<script>
+
+const display = document.getElementById("display");
+const history = document.getElementById("history");
+
+let lastAnswer = 0;
+
+function append(value){
+
+  if(display.textContent === "0" || display.textContent === "Error"){
+    display.textContent = value;
+  }else{
+    display.textContent += value;
+  }
+
+}
+
+function clearDisplay(){
+
+  display.textContent = "0";
+  history.textContent = "";
+
+}
+
+function deleteLast(){
+
+  let text = display.textContent;
+
+  if(text.length > 1){
+    display.textContent = text.slice(0,-1);
+  }else{
+    display.textContent = "0";
+  }
+
+}
+
+function useAns(){
+
+  if(display.textContent === "0"){
+    display.textContent = "";
+  }
+
+  display.textContent += lastAnswer;
+
+}
+
+function calculate(){
+
+  try{
+
+    let exp = display.textContent;
+
+    // Auto close brackets
+    const open = (exp.match(/\(/g)||[]).length;
+    const close = (exp.match(/\)/g)||[]).length;
+
+    for(let i=0;i<open-close;i++){
+      exp += ")";
+    }
+
+    let processed = exp;
+
+    // POWER
+    processed = processed.replace(/\^/g,"**");
+
+    // AUTO MULTIPLICATION
+    processed = processed.replace(/\)\(/g, ')*(');
+    processed = processed.replace(/(\d)\(/g, '$1*(');
+    processed = processed.replace(/\)(\d)/g, ')*$1');
+    processed = processed.replace(/(\d)π/g, '$1*Math.PI');
+    processed = processed.replace(/π(\d)/g, 'Math.PI*$1');
+
+    // CONSTANTS
+    processed = processed.replace(/π/g,"Math.PI");
+    processed = processed.replace(/\be\b/g,"Math.E");
+
+    // FUNCTIONS
+    processed = processed.replace(/sqrt\(/g,"Math.sqrt(");
+    processed = processed.replace(/log\(/g,"Math.log10(");
+
+    processed = processed.replace(
+      /sin\((.*?)\)/g,
+      (_,x)=>`Math.sin((${x})*Math.PI/180)`
+    );
+
+    processed = processed.replace(
+      /cos\((.*?)\)/g,
+      (_,x)=>`Math.cos((${x})*Math.PI/180)`
+    );
+
+    processed = processed.replace(
+      /tan\((.*?)\)/g,
+      (_,x)=>`Math.tan((${x})*Math.PI/180)`
+    );
+
+    let result = Function('"use strict"; return (' + processed + ')')();
+
+    if(!isFinite(result)){
+      throw Error();
+    }
+
+    if(Math.abs(result) < 1e-12){
+      result = 0;
+    }
+
+    result = Number(result.toFixed(10));
+
+    history.textContent = exp + " =";
+
+    display.textContent = result;
+
+    lastAnswer = result;
+
+  }catch(err){
+
+    display.textContent = "Error";
+
+  }
+
+}
+
+// KEYBOARD SUPPORT
+
+document.addEventListener("keydown",(e)=>{
+
+  const key = e.key;
+
+  if("0123456789+-*/().".includes(key)){
+    append(key);
+  }
+
+  if(key === "Enter"){
+    calculate();
+  }
+
+  if(key === "Backspace"){
+    deleteLast();
+  }
+
+  if(key === "Escape"){
+    clearDisplay();
+  }
+
+});
+
+</script>
+
+</body>
+  </html>
